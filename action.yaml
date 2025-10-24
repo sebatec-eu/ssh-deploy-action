@@ -1,0 +1,38 @@
+name: "SSH Deploy"
+description: "A reusable GitHub Action for SSH-based deployments"
+author: "Sebastian Schulz <16666034+seb-schulz@users.noreply.github.com>"
+inputs:
+  ssh-key:
+    description: "The private SSH key for authentication"
+    required: true
+  run:
+    description: "The command to execute for deployment"
+    required: true
+outputs:
+  result:
+    description: "The result of the deployment command"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up SSH
+      shell: bash
+      env:
+        SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        eval $(ssh-agent -a $SSH_AUTH_SOCK)
+        ssh-add - <<< "${{ inputs.ssh-key }}"
+
+    - name: Execute Deployment Command
+      shell: bash
+      env:
+        SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      run: ${{ inputs.run }}
+
+    - name: Clean up SSH agent
+      if: always()
+      shell: bash
+      env:
+        SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      run: eval $(ssh-agent -k)
