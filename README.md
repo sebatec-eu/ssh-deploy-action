@@ -59,6 +59,23 @@ endif
 | ------ | ------------------------------------ |
 | result | The result of the deployment command |
 
-### License
+## How to provide ssh key
+
+1. Create a temporary directory and generate a new SSH key:
+   ```bash
+   cd $(mktemp -d)
+   ssh-keygen -t ed25519 -C 'github action sebatec-eu/example-repo' -f id_ed25519
+   ```
+2. Copy the public key to the server's `.ssh/authorized_keys` file.
+3. Set the private key as a GitHub secret:
+   ```bash
+   cat id_ed25519 | gh secret set DEPLOY_KEY -r sebatec-eu/example-repo
+   ```
+4. Securely delete the local key files:
+   ```bash
+   shred id_ed25519* && rm id_ed25519*
+   ```
+
+## License
 
 This project is licensed under the MIT License.
